@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Your E-Commerce Site</title>
+    <style>
+        /* Basic Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        /* Header Styles */
+        header {
+            background-color: #4CAF50; /* Green header */
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+        }
+        .logo {
+            width: 100px; /* Adjust as needed */
+        }
+        .search-bar {
+            flex-grow: 1;
+            margin: 0 20px;
+        }
+        .search-bar input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+        }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 5px 10px;
+            background-color: #333;
+            border-radius: 5px;
+        }
+        /* Body Styles */
+        .product-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+            justify-content: center;
+        }
+        .product {
+            flex-basis: calc(25% - 20px); /* Four products per row */
+            border: 1px solid #ddd;
+            padding: 15px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: #f9f9f9;
+        }
+        .product img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+        .product h3 {
+            color: #333;
+            margin: 10px 0;
+        }
+        .product p {
+            color: #666;
+        }
+        .product button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        /* Responsive */
+        @media (max-width: 768px) {
+            .product {
+                flex-basis: calc(50% - 20px); /* Two products per row on smaller screens */
+            }
+        }
+    </style>
+    <script>
+        function showAlert(message) {
+            alert(message);
+        }
+        function checkCartandRedirect(cart_count) {
+            if (cart_count == 0) {
+                showAlert('Your cart is empty. Please add items to your cart before checking out.');
+            } else {
+                print("This is running");
+                window.location.href = "{{ url_for('view_cart_bp.view_cart_main') }}";
+            }
+        }
+
+        function checkCart(){
+            fetch("{{ url_for('check_cart') }}")
+            .then(response => {
+                console.log("Response received"); // Check if the response is received
+                return response.json();
+            })
+            .then(data => {
+                console.log("Data received", data); // Log the received data
+                if (data.cart_empty){
+                    console.log("Cart is empty"); // Check if this condition is met
+                    alert("Your cart is empty. Please add items to your cart before checking out.");
+                }
+                else{
+                    console.log("Cart has items, redirecting"); // Check if this condition is met
+                    window.location.href = "{{ url_for('view_cart_bp.view_cart_main') }}";
+                }
+            }).catch(error => {
+                console.error("Error:", error); // Log any errors
+            });
+        }
+
+
+
+    </script>
+</head>
+
+<body>
+
+<header>
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="logo">
+    <div class="search-bar">
+        <input type="text" placeholder="Search...">
+    </div>
+    <div class="nav-links">
+        {% if session['username'] %}
+            <span>Welcome, {{ session['username'] }}</span>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+            <a href="{{ url_for('bp_user_login.user_login') }}">Login/Signup</a>
+        {% endif %}
+        <a href="javascript:void(0)" onclick="checkCart()">View Cart</a>
+    </div>
+</header>
+
+<div class="product-container">
+    {% for product in products %}
+        <div class="product">
+            
+            {% if product[3] %}
+                <img src="{{ product[3] }}" alt="Product Image">
+            {% else %}
+                <img src="{{ url_for('static', filename='placeholder.jpg') }}" alt="No image available" class="product-image">
+            {% endif %}
+            <h3>{{ product[0] }}</h3>
+            <p>Description: {{ product[1] }}</p>
+            <p>Price: ${{ product[2] }}</p>
+            <form action="{{ url_for('add_to_cart') }}" method="post">
+                <input type="hidden" name="product_id" value="{{ product[4] }}">
+                {% if not session['username'] %}
+                    <button type="button" onclick="showAlert('Please log in to add items to your cart')">Add to Cart</button>
+                {% else %}
+                    <button type="submit">Add to Cart</button>
+                {% endif %}
+            </form>
+        </div>
+    {% else %}
+        <p>No products found.</p>
+    {% endfor %}
+</div>
+
+</body>
+</html>
